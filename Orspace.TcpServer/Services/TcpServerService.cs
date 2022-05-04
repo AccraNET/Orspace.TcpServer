@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Orspace.TcpServer.Interfaces;
 using Orspace.TcpServer.Models;
 using System;
 using System.Collections.Generic;
@@ -19,13 +21,15 @@ namespace Orspace.TcpServer.Services
         private TcpListener? _listener;
         private CancellationToken _AppStoptoken;
         private Task? _serverTask;
+        private IServiceProvider _serviceProvider;
 
 
-        public TcpServerService(ILogger<TcpServerService> logger, IOptions<ServerInfo> info, IHostApplicationLifetime applicationLifetime)
+        public TcpServerService(ILogger<TcpServerService> logger, IOptions<ServerInfo> info, IHostApplicationLifetime applicationLifetime, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _serverInfo = info.Value;
             _AppStoptoken = applicationLifetime.ApplicationStopping;
+            _serviceProvider = serviceProvider;
         }
 
 
@@ -78,14 +82,23 @@ namespace Orspace.TcpServer.Services
             {
                 try
                 {
-                    var client = await _listener.AcceptTcpClientAsync();
+                    var client = await _listener.AcceptTcpClientAsync(_AppStoptoken);
                     _logger.LogInformation("Client Connected: PORT: {port}", client.Client.LocalEndPoint);
 
+                    IConnectionHandler? handler = _serviceProvider.GetRequiredService<IConnectionHandler>();
+
+                    if(handler == null)
+                    {
+                        throw new NotImplementedException("IConnectionHandler");
+                    }
+
+                    //Fire and forget
+                    _ = Task.Run(async () => await handler.Start(client, _AppStoptoken));
                     
                 }
                 catch (Exception ex)
                 {
-
+                    Console.WriteLine(ex.Message);
                 }
             }
 
