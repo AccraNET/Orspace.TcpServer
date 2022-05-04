@@ -83,22 +83,31 @@ namespace Orspace.TcpServer.Services
                 try
                 {
                     var client = await _listener.AcceptTcpClientAsync(_AppStoptoken);
-                    _logger.LogInformation("Client Connected: PORT: {port}", client.Client.LocalEndPoint);
+                    client.LingerState.LingerTime = 0;
 
-                    IConnectionHandler? handler = _serviceProvider.GetRequiredService<IConnectionHandler>();
+                    _logger.LogInformation("Client Connected: PORT: {port}", client.Client.RemoteEndPoint);
 
-                    if(handler == null)
+
+                    try
                     {
-                        throw new NotImplementedException("IConnectionHandler");
-                    }
+                        IConnectionHandler? handler = _serviceProvider.GetRequiredService<IConnectionHandler>();
 
-                    //Fire and forget
-                    _ = Task.Run(async () => await handler.Start(client, _AppStoptoken));
+                        //Fire and forget
+                        _ = Task.Run(async () => await handler.Start(client, _AppStoptoken));
+                    }
+                    catch (Exception ex)
+                    {
+                        client.Close();
+                        client.Dispose();
+                        _logger.LogError(ex.Message);
+                    }
+                    
                     
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    _logger.LogError(ex.Message);
+                    
                 }
             }
 
