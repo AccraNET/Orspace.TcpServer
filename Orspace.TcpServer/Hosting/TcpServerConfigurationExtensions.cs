@@ -23,8 +23,18 @@ namespace Orspace.TcpServer.Hosting
 
         public static IServiceCollection AddTcpMessageHandler<T>(this IServiceCollection services)
         {
-            services.AddTransient(typeof(IConnectionHandler), typeof(T));
-            return services;
+            //Check if the Passed in type is really implements the IConnectionHandler interface.
+            //Throw an exception if it does not implement said interface
+
+            if (typeof(IConnectionHandler).IsAssignableFrom(typeof(T)) && typeof(T).IsClass)
+            {
+                services.AddTransient(typeof(IConnectionHandler), typeof(T));
+                return services;
+            }
+            else
+            {
+                throw new InvalidCastException("The provided MessageHandler type does not implement IConnectionhandler");
+            }
         }
 
     }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Orspace.TcpServer.Example
 {
-    public class TestMessageHandler : IConnectionHandler
+    public class TestMessageHandler : IConnectionHandler, IDisposable
     {
         const string test = "hello world";
         private ILogger<IConnectionHandler> _logger;
@@ -17,6 +17,11 @@ namespace Orspace.TcpServer.Example
         public TestMessageHandler(ILogger<IConnectionHandler> logger)
         {
             _logger = logger;
+        }
+
+        public void Dispose()
+        {
+            _logger.LogInformation("Dispose Called");
         }
 
         public async Task Start(TcpClient client, CancellationToken stopToken)
