@@ -21,5 +21,11 @@ namespace Orspace.TcpServer.Hosting
             return services;
         }
 
+        public static IServiceCollection AddMessageHandler<T>(this IServiceCollection services)
+        {
+            services.AddTransient(typeof(IConnectionHandler), typeof(T));
+            return services;
+        }
+
     }
 }
