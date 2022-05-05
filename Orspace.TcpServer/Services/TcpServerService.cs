@@ -22,6 +22,7 @@ namespace Orspace.TcpServer.Services
         private CancellationToken _AppStoptoken;
         private Task? _serverTask;
         private IServiceProvider _serviceProvider;
+        private int _connectionCount;
 
 
         public TcpServerService(ILogger<TcpServerService> logger, IOptions<ServerInfo> info, IHostApplicationLifetime applicationLifetime, IServiceProvider serviceProvider)
@@ -30,6 +31,7 @@ namespace Orspace.TcpServer.Services
             _serverInfo = info.Value;
             _AppStoptoken = applicationLifetime.ApplicationStopping;
             _serviceProvider = serviceProvider;
+            _connectionCount = 0;
         }
 
 
@@ -59,7 +61,9 @@ namespace Orspace.TcpServer.Services
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            
+            //Stop the TcpServer gracefully
+            _serverTask?.Wait();
+            _listener?.Stop();                       
         }
 
 
@@ -83,9 +87,10 @@ namespace Orspace.TcpServer.Services
                 try
                 {
                     var client = await _listener.AcceptTcpClientAsync(_AppStoptoken);
+                    _connectionCount++;
                     client.LingerState.LingerTime = 0;
 
-                    _logger.LogInformation("Client Connected: PORT: {port}", client.Client.RemoteEndPoint);
+                    _logger.LogInformation("Client Connected: \nPORT: {port} \nIP: {ip}", (client.Client.RemoteEndPoint as IPEndPoint).Port, (client.Client.RemoteEndPoint as IPEndPoint).Address);
 
 
                     try
@@ -93,16 +98,14 @@ namespace Orspace.TcpServer.Services
                         IConnectionHandler? handler = _serviceProvider.GetRequiredService<IConnectionHandler>();
 
                         //Fire and forget
-                        _ = Task.Run(async () => await handler.Start(client, _AppStoptoken));
+                        _ = Task.Run(async () => await RequestHandlerTask(handler, client, _AppStoptoken));
                     }
                     catch (Exception ex)
                     {
                         client.Close();
                         client.Dispose();
                         _logger.LogError(ex.Message);
-                    }
-                    
-                    
+                    }                    
                 }
                 catch (Exception ex)
                 {
@@ -111,6 +114,28 @@ namespace Orspace.TcpServer.Services
                 }
             }
 
+        }
+
+
+        /// <summary>
+        /// Handles a connection from a client.
+        /// </summary>
+        /// <param name="handler"></param>
+        /// <param name="client"></param>
+        /// <param name="stopToken"></param>
+        /// <returns></returns>
+        private async Task RequestHandlerTask(IConnectionHandler handler, TcpClient client, CancellationToken stopToken)
+        {
+            try
+            {
+                await handler.Start(client, stopToken);
+                client.Close();
+                client.Dispose();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Request Handler Exception \n {message}", ex.Message);
+            }            
         }
     }
 }

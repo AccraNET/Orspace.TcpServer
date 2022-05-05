@@ -1,4 +1,5 @@
-﻿using Orspace.TcpServer.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using Orspace.TcpServer.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,12 @@ namespace Orspace.TcpServer.Example
     public class TestMessageHandler : IConnectionHandler
     {
         const string test = "hello world";
+        private ILogger<IConnectionHandler> _logger;
+
+        public TestMessageHandler(ILogger<IConnectionHandler> logger)
+        {
+            _logger = logger;
+        }
 
         public async Task Start(TcpClient client, CancellationToken stopToken)
         {
@@ -18,14 +25,10 @@ namespace Orspace.TcpServer.Example
             {
                 NetworkStream stream = client.GetStream();
                 await stream.WriteAsync(Encoding.UTF8.GetBytes(test), 0, test.Length);
-                stream.Close();
-
-                client.Close();
-                client.Dispose();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogWarning("Error in request handler");
             }
             
         }

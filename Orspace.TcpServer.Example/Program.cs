@@ -11,7 +11,7 @@ var hostbuiler = Host.CreateDefaultBuilder();
 hostbuiler.ConfigureServices((context, services) =>
 {
     services.AddOrspaceTcpServer(context.Configuration);
-    services.AddMessageHandler<TestMessageHandler>();
+    services.AddTcpMessageHandler<TestMessageHandler>();
 });
 
 var host = hostbuiler.Build();

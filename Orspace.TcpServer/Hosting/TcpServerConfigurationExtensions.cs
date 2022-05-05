@@ -11,7 +11,7 @@ using Orspace.TcpServer.Interfaces;
 
 namespace Orspace.TcpServer.Hosting
 {
-    public static class TcpServerConfigurationExtesions
+    public static class TcpServerConfigurationExtensions
     {
         public static IServiceCollection AddOrspaceTcpServer(this IServiceCollection services, IConfiguration config)
         {
@@ -21,7 +21,7 @@ namespace Orspace.TcpServer.Hosting
             return services;
         }
 
-        public static IServiceCollection AddMessageHandler<T>(this IServiceCollection services)
+        public static IServiceCollection AddTcpMessageHandler<T>(this IServiceCollection services)
         {
             services.AddTransient(typeof(IConnectionHandler), typeof(T));
             return services;
