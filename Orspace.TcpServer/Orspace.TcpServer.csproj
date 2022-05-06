@@ -4,7 +4,28 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Authors>CerezoGH</Authors>
+    <Company>Orspace</Company>
+    <Description>A scalable asynchronous Tcp Server for .NET </Description>
+    <PackageProjectUrl>https://github.com/AccraNET/Orspace.TcpServer</PackageProjectUrl>
+    <PackageIcon>SM_logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/AccraNET/Orspace.TcpServer</RepositoryUrl>
+    <PackageTags>tcp;server;asynchronous;iot</PackageTags>
+    <PackageReleaseNotes>Minor fixes to handle uncaught exception in ConnectionHandler</PackageReleaseNotes>
+    <Version>1.0.1</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\Documents\OrSpace\Marketing\SM_logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />

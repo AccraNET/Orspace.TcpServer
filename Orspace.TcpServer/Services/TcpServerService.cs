@@ -90,7 +90,7 @@ namespace Orspace.TcpServer.Services
                     _connectionCount++;
                     client.LingerState.LingerTime = 0;
 
-                    _logger.LogInformation("Client Connected: \nPORT: {port} \nIP: {ip}", (client.Client.RemoteEndPoint as IPEndPoint).Port, (client.Client.RemoteEndPoint as IPEndPoint).Address);
+                    //_logger.LogInformation("Client Connected: \nPORT: {port} \nIP: {ip}", (client.Client.RemoteEndPoint as IPEndPoint).Port, (client.Client.RemoteEndPoint as IPEndPoint).Address);
 
 
                     try
@@ -102,8 +102,8 @@ namespace Orspace.TcpServer.Services
                     }
                     catch (Exception ex)
                     {
-                        client.Close();
-                        client.Dispose();
+                        client?.Close();
+                        client?.Dispose();
                         _logger.LogError(ex.Message);
                     }                    
                 }
@@ -154,6 +154,10 @@ namespace Orspace.TcpServer.Services
             catch(Exception ex)
             {
                 _logger.LogError("Request Handler Exception \n {message}", ex.Message);
+
+                //Dispose of the Tcpclient objects
+                client?.Close();
+                client?.Dispose();
             }            
         }
     }
