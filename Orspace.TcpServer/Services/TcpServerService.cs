@@ -129,8 +129,8 @@ namespace Orspace.TcpServer.Services
             try
             {
                 await handler.Start(client, stopToken);
-                client.Close();
-                client.Dispose();
+                client?.Close();
+                client?.Dispose();
 
 
                 //Check if handler class implements the IDisposable or IDisposableAsync Interface

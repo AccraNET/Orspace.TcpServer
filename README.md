@@ -24,4 +24,4 @@ and the server will call either `Dispose()` or `DisposeAsync()` to run your clea
 
 
 ## Example Usage
-Refer to the project `Orspace.TcpServer.Example` for an example implementation an `IConnectionHandler` class.
+Refer to the project `Orspace.TcpServer.Example` for an example implementation of the `IConnectionHandler` interface.
