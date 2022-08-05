@@ -21,16 +21,16 @@ namespace Orspace.TcpServer.Services
         private TcpListener? _listener;
         private CancellationToken _AppStoptoken;
         private Task? _serverTask;
-        private IServiceProvider _serviceProvider;
+        private IServiceScopeFactory _serviceProviderFactory;
         private int _connectionCount;
 
 
-        public TcpServerService(ILogger<TcpServerService> logger, IOptions<ServerInfo> info, IHostApplicationLifetime applicationLifetime, IServiceProvider serviceProvider)
+        public TcpServerService(ILogger<TcpServerService> logger, IOptions<ServerInfo> info, IHostApplicationLifetime applicationLifetime, IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
             _serverInfo = info.Value;
             _AppStoptoken = applicationLifetime.ApplicationStopping;
-            _serviceProvider = serviceProvider;
+            _serviceProviderFactory = scopeFactory;
             _connectionCount = 0;
         }
 
@@ -40,13 +40,13 @@ namespace Orspace.TcpServer.Services
         {
             try
             {
-                _logger.LogInformation("Starting the TCP server.");
-
                 //We start the tcp server here
                 int port = _serverInfo.Port;
                 IPAddress iPAddress = IPAddress.Parse(_serverInfo.IpAddress);
 
                 _listener = new TcpListener(iPAddress, port);
+
+                _logger.LogInformation("TcpSeerver Started on {ip}, port {port}", _serverInfo.IpAddress.ToString(), _serverInfo.Port);
 
                 //Start the server task
                 _serverTask = Task.Run(async () => await MainServerTask(_AppStoptoken), _AppStoptoken);
@@ -90,15 +90,16 @@ namespace Orspace.TcpServer.Services
                     _connectionCount++;
                     client.LingerState.LingerTime = 0;
 
-                    //_logger.LogInformation("Client Connected: \nPORT: {port} \nIP: {ip}", (client.Client.RemoteEndPoint as IPEndPoint).Port, (client.Client.RemoteEndPoint as IPEndPoint).Address);
+                    _logger.LogInformation("Client Connected: \nPORT: {port} \nIP: {ip}", (client.Client.RemoteEndPoint as IPEndPoint).Port, (client.Client.RemoteEndPoint as IPEndPoint).Address);
 
 
                     try
                     {
-                        IConnectionHandler? handler = _serviceProvider.GetRequiredService<IConnectionHandler>();
+                        //Start a task running the RequestHandler method. 
+                        //Pass in the Tcpclient object.
 
                         //Fire and forget
-                        _ = Task.Run(async () => await RequestHandlerTask(handler, client, _AppStoptoken));
+                        _ = Task.Run(async () => await RequestHandlerTask(client, _AppStoptoken));
                     }
                     catch (Exception ex)
                     {
@@ -124,32 +125,37 @@ namespace Orspace.TcpServer.Services
         /// <param name="client"></param>
         /// <param name="stopToken"></param>
         /// <returns></returns>
-        private async Task RequestHandlerTask(IConnectionHandler handler, TcpClient client, CancellationToken stopToken)
+        private async Task RequestHandlerTask(TcpClient client, CancellationToken stopToken)
         {
             try
             {
-                await handler.Start(client, stopToken);
-                client?.Close();
-                client?.Dispose();
-
-
-                //Check if handler class implements the IDisposable or IDisposableAsync Interface
-                //If it does, call the Dispose() or DisposeAsync() methods
-                if(handler != null)
+                using(var scope = _serviceProviderFactory.CreateScope())
                 {
-                    if (typeof(IDisposable).IsAssignableFrom(handler.GetType()))
+
+                    var handler = scope.ServiceProvider.GetRequiredService<IConnectionHandler>();
+
+                    await handler.Start(client, stopToken);
+                    client?.Close();
+                    client?.Dispose();
+
+
+                    //Check if handler class implements the IDisposable or IDisposableAsync Interface
+                    //If it does, call the Dispose() or DisposeAsync() methods
+                    if (handler != null)
                     {
-                        (handler as IDisposable).Dispose();
-                    }
-                    else
-                    {
-                        if (typeof(IAsyncDisposable).IsAssignableFrom(handler.GetType()))
+                        if (typeof(IDisposable).IsAssignableFrom(handler.GetType()))
                         {
-                            await (handler as IAsyncDisposable).DisposeAsync();
+                            (handler as IDisposable).Dispose();
+                        }
+                        else
+                        {
+                            if (typeof(IAsyncDisposable).IsAssignableFrom(handler.GetType()))
+                            {
+                                await (handler as IAsyncDisposable).DisposeAsync();
+                            }
                         }
                     }
                 }
-
             }
             catch(Exception ex)
             {

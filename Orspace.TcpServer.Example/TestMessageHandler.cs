@@ -30,6 +30,7 @@ namespace Orspace.TcpServer.Example
             {
                 NetworkStream stream = client.GetStream();
                 await stream.WriteAsync(Encoding.UTF8.GetBytes(test), 0, test.Length);
+                await Task.Delay(2000);
             }
             catch (Exception ex)
             {

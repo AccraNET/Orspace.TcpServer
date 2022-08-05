@@ -28,7 +28,7 @@ namespace Orspace.TcpServer.Hosting
 
             if (typeof(IConnectionHandler).IsAssignableFrom(typeof(T)) && typeof(T).IsClass)
             {
-                services.AddTransient(typeof(IConnectionHandler), typeof(T));
+                services.AddScoped(typeof(IConnectionHandler), typeof(T));
                 return services;
             }
             else
