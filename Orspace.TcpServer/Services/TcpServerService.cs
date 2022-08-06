@@ -88,7 +88,13 @@ namespace Orspace.TcpServer.Services
                 {
                     var client = await _listener.AcceptTcpClientAsync(_AppStoptoken);
                     _connectionCount++;
-                    client.LingerState.LingerTime = 0;
+
+                    if(client.LingerState != null)
+                    {
+                        client.LingerState.Enabled = true;
+                        client.LingerState.LingerTime = 0;
+                    }
+                   
 
                     _logger.LogInformation("Client Connected: \nPORT: {port} \nIP: {ip}", (client.Client.RemoteEndPoint as IPEndPoint).Port, (client.Client.RemoteEndPoint as IPEndPoint).Address);
 
@@ -131,30 +137,12 @@ namespace Orspace.TcpServer.Services
             {
                 using(var scope = _serviceProviderFactory.CreateScope())
                 {
-
+                    //handler is disposed of code leaves this block
                     var handler = scope.ServiceProvider.GetRequiredService<IConnectionHandler>();
 
                     await handler.Start(client, stopToken);
                     client?.Close();
                     client?.Dispose();
-
-
-                    //Check if handler class implements the IDisposable or IDisposableAsync Interface
-                    //If it does, call the Dispose() or DisposeAsync() methods
-                    if (handler != null)
-                    {
-                        if (typeof(IDisposable).IsAssignableFrom(handler.GetType()))
-                        {
-                            (handler as IDisposable).Dispose();
-                        }
-                        else
-                        {
-                            if (typeof(IAsyncDisposable).IsAssignableFrom(handler.GetType()))
-                            {
-                                await (handler as IAsyncDisposable).DisposeAsync();
-                            }
-                        }
-                    }
                 }
             }
             catch(Exception ex)

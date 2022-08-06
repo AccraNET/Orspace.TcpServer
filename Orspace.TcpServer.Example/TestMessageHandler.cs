@@ -11,7 +11,7 @@ namespace Orspace.TcpServer.Example
 {
     public class TestMessageHandler : IConnectionHandler, IDisposable
     {
-        const string test = "hello world";
+        const string test = "hello world (TCP)";
         private ILogger<IConnectionHandler> _logger;
 
         public TestMessageHandler(ILogger<IConnectionHandler> logger)
