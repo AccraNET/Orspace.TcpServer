@@ -12,8 +12,8 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/AccraNET/Orspace.TcpServer</RepositoryUrl>
     <PackageTags>tcp;server;asynchronous;iot</PackageTags>
-    <PackageReleaseNotes>Minor fixes to handle uncaught exception in ConnectionHandler</PackageReleaseNotes>
-    <Version>1.0.1</Version>
+    <PackageReleaseNotes>Updated Connectionhandler instance creation to handle proper disposable and object resolution</PackageReleaseNotes>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
